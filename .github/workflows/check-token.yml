@@ -1,0 +1,21 @@
+name: Checar token do Instagram
+
+# Toda segunda às 8h (BRT). Se o token vencer ou perder permissão,
+# este job falha e o GitHub manda e-mail avisando.
+on:
+  schedule:
+    - cron: "0 11 * * 1"
+  workflow_dispatch: {}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Consultar a conta com o token salvo
+        env:
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+        run: |
+          resp=$(curl -s "https://graph.facebook.com/v21.0/${IG_USER_ID}?fields=username&access_token=${IG_ACCESS_TOKEN}")
+          echo "$resp" | grep -q '"username":"rftributaria"' || { echo "Token inválido ou conta errada: $resp" | sed "s/${IG_ACCESS_TOKEN}/***/g"; exit 1; }
+          echo "Token OK — conta @rftributaria"
